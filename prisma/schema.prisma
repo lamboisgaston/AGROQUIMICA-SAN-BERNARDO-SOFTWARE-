@@ -7,19 +7,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Usuario {
-  id       String @id @default(uuid())
-  nombre   String
-  email    String @unique
-  password String
-  rol      Rol
-}
-
 enum Rol {
   DUENO
   GERENTE
   CAJA
   MOSTRADOR
+}
+
+enum Moneda {
+  ARS
+  USD
+}
+
+model Usuario {
+  id            String         @id @default(uuid())
+  nombre        String
+  email         String         @unique
+  password      String
+  rol           Rol
+
+  aperturasCaja AperturaCaja[]
+  cierresCaja   CierreCaja[]
 }
 
 model Cliente {
@@ -30,8 +38,40 @@ model Cliente {
 }
 
 model Producto {
-  id     String @id @default(uuid())
-  nombre String
-  precio Float
-  stock  Int
+  id             String   @id @default(uuid())
+  nombre         String
+  costoBase      Float
+  monedaCosto    Moneda   @default(ARS)
+  tipoCambio     Float    @default(1)
+  flete          Float    @default(0)
+  iva            Float    @default(21)
+  margenGanancia Float    @default(30)
+  precioVenta    Float
+  stock          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AperturaCaja {
+  id           String       @id @default(uuid())
+  usuario      Usuario      @relation(fields: [usuarioId], references: [id])
+  usuarioId    String
+
+  montoInicial Float
+  cierreCaja   CierreCaja?
+
+  createdAt    DateTime     @default(now())
+}
+
+model CierreCaja {
+  id           String       @id @default(uuid())
+  usuario      Usuario      @relation(fields: [usuarioId], references: [id])
+  usuarioId    String
+  aperturaCaja AperturaCaja @relation(fields: [aperturaId], references: [id])
+  aperturaId   String       @unique
+
+  montoFinal   Float
+  diferencia   Float
+
+  createdAt    DateTime     @default(now())
 }
